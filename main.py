@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request 
+from flask import Flask, render_template, request, redirect
+from scrapper import get_jobs
 
 app = Flask("Job_Scrapper")
 
@@ -12,9 +13,14 @@ def home():
 @app.route("/report")
 def report():
   # print(request.args) #모든 request 데이터가(url에 있는 글씨들) 우리한테 넘어온다
-  word = request.args.get('word')
-
+  word = request.args.get("word")
+  if word: #글씨 없는 것 check
+    word = word.lower() #모든 글자 소문자로 만들어주기
+    jobs = get_jobs(word) #web_site url에서 오는 word를 받는다.
+  else:
+    return redirect("/") #아무 것도 없을 시 원래로 돌려주기(report)
   #report.html로 word데이터 넘겨주기
+  #report.html의 {{searchingBy}} 에 word를 넣어준다.
   return render_template("report.html",searchingBy=word)
 
 
