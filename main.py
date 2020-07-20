@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, send_file
 from scrapper import get_jobs
+from exporter import save_to_file
 
 app = Flask("Job_Scrapper")
 
@@ -15,14 +16,18 @@ def home():
 def report():
   # print(request.args) #모든 request 데이터가(url에 있는 글씨들) 우리한테 넘어온다
   word = request.args.get("word")
+  
   if word: #글씨 없는 것 check
     word = word.lower() #모든 글자 소문자로 만들어주기
     existingJobs = db.get(word) #db에서 먼저 찾아본다.
+
     if existingJobs: 
       jobs = existingJobs
+
     else:
       jobs = get_jobs(word) #web_site url에서 오는 word를 받는다.
       db[word] = jobs
+
   else:
     return redirect("/") #아무 것도 없을 시 원래로 돌려주기(report)
   #report.html로 word데이터 넘겨주기
@@ -38,6 +43,23 @@ def report():
 # def potato(username):
 #   return "hello {username} " 
 
+@app.route("/export")
+def export():
+  #error가 나면 except으로 간다.
+  try:
+    word = request.args.get('word')
+    if not word:
+      raise Exception() #에러발생시 except부분으로 간다.
+    
+    word = word.lower()
+    jobs = db.get(word)
+    if not jobs:
+      raise Exception() 
+    save_to_file(jobs)
+    return send_file("jobs.csv")
+
+  except:
+    return redirect("/")
 
 
 app.run(host="0.0.0.0") #새로운 window창이 뜬다./ host="0.0.0.0"은 repl.it에서 실행화면 보여주기 위해 사용하는 것
